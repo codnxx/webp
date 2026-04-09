@@ -436,7 +436,20 @@ function buildInitiativeScreen(){
     '</div>';
 
   if(!S.initiative){
-    html+='<button class="btn btn-gold" style="font-size:1rem;padding:12px 28px" onclick="rollInitiativeAll()">🎲 전원 주사위 굴리기</button>';
+    html+='<div style="width:100%;max-width:360px">'+
+      '<div class="panel">'+
+        '<div class="panel-title" style="display:flex;align-items:center;justify-content:space-between">플레이어 이름 설정<button class="btn btn-xs btn-blue" onclick="addPlayer()">+ 추가</button></div>';
+    for(var i=0;i<S.players.length;i++){
+      var p=S.players[i];
+      var borderStyle=i<S.players.length-1?'border-bottom:1px solid var(--border);':'';
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;'+borderStyle+'">'+
+        '<div style="flex:1;font-weight:700;font-size:0.88rem">'+esc(p.name)+'</div>'+
+        '<button class="btn btn-xs btn-gold" onclick="openEditPlayerInit('+i+')">편집</button>'+
+        '<button class="btn btn-xs btn-red" onclick="deletePlayer('+i+')" style="padding:1px 6px;font-size:0.7rem">✕</button>'+
+      '</div>';
+    }
+    html+='</div></div>';
+    html+='<button class="btn btn-gold" style="font-size:1rem;padding:12px 28px" onclick="rollInitiativeAll()">🎲 주사위 굴리기</button>';
   } else {
     html+='<div style="width:100%;max-width:360px">'+
       '<div class="panel">'+
@@ -460,6 +473,23 @@ function buildInitiativeScreen(){
 
   html+='</div>';
   return html;
+}
+
+function openEditPlayerInit(i){
+  var p=S.players[i]; document.getElementById('modal-title').textContent='플레이어 이름 설정';
+  document.getElementById('modal-save-btn').textContent='저장';
+  document.getElementById('modal-body').innerHTML=
+    '<label>이름</label><input id="m-name" value="'+esc(p.name)+'">'+
+    '<label>최대 HP</label><input id="m-maxhp" type="number" value="'+p.maxHp+'">'+
+    '<label>현재 HP</label><input id="m-curhp" type="number" value="'+p.currentHp+'">';
+  modalCallback=function(){
+    p.name=document.getElementById('m-name').value||p.name;
+    p.maxHp=parseInt(document.getElementById('m-maxhp').value)||p.maxHp;
+    p.currentHp=parseInt(document.getElementById('m-curhp').value)||p.currentHp;
+    pushState(); renderApp();
+  };
+  document.getElementById('modal-bg').style.display='flex';
+  setTimeout(function(){ var el=document.getElementById('m-name'); if(el){el.focus();el.select();} },50);
 }
 
 function rollInitiativeAll(){
