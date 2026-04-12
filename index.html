@@ -412,7 +412,7 @@ function buildHome(){
         '<div class="card-title">포커스 매치</div>'+
       '</div>'+
       '<div class="home-card dice-card" onclick="enterMode(\'dice\')">'+
-        '<div class="card-title">다이스 야차</div>'+
+        '<div class="card-title">다이스 크래시</div>'+
       '</div>'+
     '</div>'+
   '</div>';
@@ -658,7 +658,7 @@ function buildPosResult(){
     '<button class="copy-btn" id="pos-copy-btn" onclick="copyPosResult()">결과 복사</button></div>';
 }
 
-// ── 다이스 야차 레이아웃 ─────────────────────────────────
+// ── 다이스 크래시 레이아웃 ─────────────────────────────────
 function buildDiceLayout(){
   return '<div class="layout-grid layout-dice">'+buildMonSide()+buildDiceBattle()+buildPlayerSide()+'</div>'+
     '<div class="panel" style="margin-top:8px">'+
@@ -713,7 +713,7 @@ function buildPlayerSide(){
 
 function buildDiceBattle(){
   var d=S.dice, p=S.players[d.pid], m=activeMon(), wpn=p.weaponDamage||0, matk=m.atkBonus||0;
-  var html='<div class="panel"><div class="panel-title">다이스 야차</div><div class="battle-center">'+
+  var html='<div class="panel"><div class="panel-title">다이스 크래시</div><div class="battle-center">'+
     buildDicePlayerSelect()+
     '<div class="vs-badge"><span style="color:var(--txt);font-weight:700">'+esc(p.name)+'</span><span style="color:var(--muted);font-size:0.75rem">VS</span><span style="color:var(--red);font-weight:700">'+esc(m.name)+'</span></div>';
 
@@ -778,7 +778,7 @@ function buildDiceResultCard(){
     critHtml='<div class="crit-badge">'+cl+'</div>';
   }
   var winTxt=r.winner==='player'?'플레이어 승리':r.winner==='monster'?'괴물 승리':'무승부';
-  var detail=r.winner==='tie'?'대미지 없음':
+  var detail=r.winner==='tie'?'양측 모두 '+r.dmg+'의 피해':
     r.winner==='player'?esc(r.pname)+' ['+r.pt+'] vs '+esc(r.mname)+' ['+r.mt+'] — 괴물에게 '+r.dmg+' 대미지':
     esc(r.mname)+' ['+r.mt+'] vs '+esc(r.pname)+' ['+r.pt+'] — '+esc(r.pname)+'에게 '+r.dmg+' 대미지';
   return '<div class="result-card '+cls+'">'+critHtml+
@@ -921,7 +921,7 @@ function nextPosTurn(){
   pushState(); renderApp();
 }
 
-// ── 다이스 야차 로직 ─────────────────────────────────────
+// ── 다이스 크래시 로직 ─────────────────────────────────────
 function setDicePlayer(i){
   if(S.players[i].escaped) return;
   S.dice.pid=i; S.dice.phase='ready'; S.dice.pd=[null,null]; S.dice.md=[null,null]; S.dice.result=null;
@@ -965,8 +965,14 @@ function rollDice(){
     addLog(diceLine+'\n'+msg);
     if(prevHp>0&&p.currentHp<=0) addLog(p.name+josa(p.name,'이','가')+' 쓰러졌습니다!');
   } else {
-    result={winner:'tie',pt:pt,mt:mt,pname:p.name,mname:m.name,dmg:0,critType:null,pbase:pbase,mbase:mbase,wpn:wpn,matk:matk};
-    addLog(diceLine+'\n무승부. 대미지 없음.');
+    var tdmg=rollD6();
+    var prevPHp=p.currentHp, prevMHp=m.currentHp;
+    p.currentHp=Math.max(0,p.currentHp-tdmg);
+    m.currentHp=Math.max(0,m.currentHp-tdmg);
+    result={winner:'tie',pt:pt,mt:mt,pname:p.name,mname:m.name,dmg:tdmg,critType:null,pbase:pbase,mbase:mbase,wpn:wpn,matk:matk};
+    addLog(diceLine+'\n무승부. 양측 모두 '+tdmg+'의 피해를 입습니다.');
+    if(prevPHp>0&&p.currentHp<=0) addLog(p.name+josa(p.name,'이','가')+' 쓰러졌습니다!');
+    if(prevMHp>0&&m.currentHp<=0) addLog(m.name+josa(m.name,'이','가')+' 쓰러졌습니다!');
   }
   d.pd=pd; d.md=md; d.result=result; d.phase='result';
   checkBattleEnd();
@@ -1220,7 +1226,7 @@ function copyDiceResult(){
     if(r.critType) txt+='['+md[0]+']['+md[1]+'] 더블 다이스! 크리티컬로 인해 '+p.name+'의 체력이 '+r.dmg+' 감소합니다.';
     else txt+=m.name+'의 공격이 성공합니다. '+p.name+'의 체력이 '+r.dmg+' 감소합니다.';
   } else {
-    txt+='아무 일도 일어나지 않습니다.';
+    txt+='무승부. 양측 모두 '+r.dmg+'의 피해를 입습니다.';
   }
   copyText(txt,'dice-copy-btn');
 }
