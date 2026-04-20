@@ -753,32 +753,33 @@ function buildDiceBattle(){
     buildDicePlayerSelect()+
     '<div class="vs-badge"><span style="color:var(--txt);font-weight:700">'+esc(p.name)+'</span><span style="color:var(--muted);font-size:0.75rem">VS</span><span style="color:var(--red);font-weight:700">'+esc(m.name)+'</span></div>';
 
+  var isTie=d.result&&d.result.winner==='tie';
   html+='<div class="dice-display">';
   html+='<div class="dice-pair"><div class="dice-pair-label">'+esc(p.name)+'</div><div class="dice-faces">';
   for(var i=0;i<2;i++){
     var dv=d.pd[i], dc='die';
-    if(dv!==null){ dc+=' rolled'; if(d.pd[0]!==null&&d.pd[0]===d.pd[1]) dc+=' crit'; }
+    if(dv!==null){ dc+=' rolled'; if(!isTie&&d.pd[0]!==null&&d.pd[0]===d.pd[1]) dc+=' crit'; }
     html+='<div class="'+dc+'">'+(dv!==null?dv:'?')+'</div>';
   }
   html+='</div>';
   if(d.pd[0]!==null){
     var ps=d.pd[0]+d.pd[1];
     html+='<div class="dice-sum">'+(ps+wpn)+(wpn?'<small> ('+ps+'+'+wpn+')</small>':'')+'</div>';
-    if(d.pd[0]===d.pd[1]) html+='<div class="double-label">더블</div>';
+    if(!isTie&&d.pd[0]===d.pd[1]) html+='<div class="double-label">더블</div>';
   }
   html+='</div>';
   html+='<div style="font-size:1.1rem;color:var(--muted);font-weight:900">VS</div>';
   html+='<div class="dice-pair"><div class="dice-pair-label">'+esc(m.name)+'</div><div class="dice-faces">';
   for(var j=0;j<2;j++){
     var mv=d.md[j], mc='die';
-    if(mv!==null){ mc+=' rolled'; if(d.md[0]!==null&&d.md[0]===d.md[1]) mc+=' crit'; }
+    if(mv!==null){ mc+=' rolled'; if(!isTie&&d.md[0]!==null&&d.md[0]===d.md[1]) mc+=' crit'; }
     html+='<div class="'+mc+'">'+(mv!==null?mv:'?')+'</div>';
   }
   html+='</div>';
   if(d.md[0]!==null){
     var ms=d.md[0]+d.md[1];
     html+='<div class="dice-sum">'+(ms+matk)+(matk?'<small> ('+ms+'+'+matk+')</small>':'')+'</div>';
-    if(d.md[0]===d.md[1]) html+='<div class="double-label">더블</div>';
+    if(!isTie&&d.md[0]===d.md[1]) html+='<div class="double-label">더블</div>';
   }
   html+='</div></div>';
 
