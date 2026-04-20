@@ -212,18 +212,6 @@
     #log-area p{ padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.025); }
     #log-area p:first-child{ color:var(--txt); }
 
-    /* ─── 전투 종료 오버레이 ─── */
-    .battle-end-overlay{
-      position:fixed; inset:0; background:rgba(0,0,0,0.88);
-      display:flex; align-items:center; justify-content:center; z-index:200;
-      animation:fadeup 0.3s ease;
-    }
-    .battle-end-box{
-      border-radius:16px; padding:44px 40px; text-align:center; max-width:340px; width:90%;
-    }
-    .battle-end-title{ font-size:2.2rem; font-weight:900; margin-bottom:10px; }
-    .battle-end-sub{ font-size:0.88rem; color:var(--muted); margin-bottom:28px; line-height:1.6; }
-
     /* ─── 모달 ─── */
     .modal-bg{
       position:fixed; inset:0; background:rgba(0,0,0,0.85);
@@ -346,13 +334,13 @@ function checkBattleEnd(){
   }
   if(allGone){
     S.battleEnded=allDead?'defeat':'escaped';
-    addLog('=== 전투 종료: '+(S.battleEnded==='escaped'?'전원 도주':'전멸')+' ===');
+    addLog(S.battleEnded==='escaped'?'전원 도주했습니다.':'전투 패배했습니다.');
     return true;
   }
 
   if(S.appMode==='position'&&S.boss.currentHp<=0){
     S.battleEnded='victory';
-    addLog('=== 전투 종료: 승리! ===');
+    addLog('전투 승리했습니다!');
     return true;
   }
 
@@ -363,7 +351,7 @@ function checkBattleEnd(){
     }
     if(allMonDead){
       S.battleEnded='victory';
-      addLog('=== 전투 종료: 승리! ===');
+      addLog('전투 승리했습니다!');
       return true;
     }
   }
@@ -376,8 +364,6 @@ function resetBattle(){
   var fresh=mkState();
   fresh.appMode=S.appMode;
   S=fresh;
-  var overlay=document.querySelector('.battle-end-overlay');
-  if(overlay) overlay.remove();
   addLog('전투가 초기화되었습니다.');
   pushState(); renderApp();
 }
@@ -386,8 +372,6 @@ function resetBattle(){
 function renderApp(){
   var homeBtn=document.getElementById('home-btn-el');
   homeBtn.style.display=S.appMode?'inline-block':'none';
-  var prev=document.querySelector('.battle-end-overlay');
-  if(prev) prev.remove();
 
   var app=document.getElementById('app');
   if(!S.appMode){
@@ -400,26 +384,6 @@ function renderApp(){
     app.innerHTML='<div id="main">'+buildDiceLayout()+'</div>';
   }
 
-  if(S.battleEnded&&S.appMode&&S.appMode!=='initiative') showBattleEndOverlay();
-}
-
-function showBattleEndOverlay(){
-  var isVictory=(S.battleEnded==='victory');
-  var isEscaped=(S.battleEnded==='escaped');
-  var title=isVictory?'승리!':isEscaped?'전원 도주':'전멸';
-  var sub=isVictory?'모든 적을 물리쳤습니다!':isEscaped?'모든 플레이어가 전장을 이탈했습니다.':'모든 플레이어가 쓰러졌습니다.';
-  var borderColor=isVictory?'var(--green)':'var(--red)';
-  var bgColor=isVictory?'#0a1a10':'#1a0808';
-  var titleColor=isVictory?'var(--green)':'var(--red)';
-  var div=document.createElement('div');
-  div.className='battle-end-overlay';
-  div.innerHTML=
-    '<div class="battle-end-box" style="background:'+bgColor+';border:2px solid '+borderColor+'">'+
-      '<div class="battle-end-title" style="color:'+titleColor+'">'+title+'</div>'+
-      '<div class="battle-end-sub">'+sub+'</div>'+
-      '<button class="btn btn-gold" onclick="resetBattle()">전투 초기화</button>'+
-    '</div>';
-  document.body.appendChild(div);
 }
 
 // ── 홈 ──────────────────────────────────────────────────
