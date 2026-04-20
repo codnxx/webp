@@ -110,8 +110,21 @@
     .mon-item:hover{ border-color:var(--border2); }
     .mon-item.active{ border-color:var(--gold); }
     .mon-item.rogue{ border-color:#c89020; }
+    .mon-item.dead{ border-color:var(--red); background:#200808; opacity:0.7; }
+    .mon-item.dead .mon-name{ color:var(--red); text-decoration:line-through; }
     .mon-item .mon-name{ font-weight:700; font-size:0.85rem; color:var(--txt); }
     .mon-item .mon-hp-txt{ font-size:0.74rem; color:var(--muted); margin-top:1px; }
+
+    /* ─── 토스트 알림 ─── */
+    .toast{
+      position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+      background:#1a0808; border:2px solid var(--red); color:var(--red);
+      font-weight:900; font-size:1rem; padding:12px 28px; border-radius:10px;
+      z-index:300; white-space:nowrap; pointer-events:none;
+      animation:toast-in 0.2s ease, toast-out 0.4s ease 1.8s forwards;
+    }
+    @keyframes toast-in{ from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+    @keyframes toast-out{ to{opacity:0;transform:translateX(-50%) translateY(10px)} }
 
     /* ─── 플레이어 ─── */
     .player-row{
@@ -413,6 +426,13 @@ function enterMode(mode){
 }
 function goHome(){ S.appMode=null; pushState(); renderApp(); }
 
+function showToast(msg){
+  var t=document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); },2200);
+}
+
 // ── 순서 결정 ────────────────────────────────────────────
 function buildInitiativeScreen(){
   var html='<div id="home-screen">'+
@@ -691,13 +711,13 @@ function buildMonSide(){
 function renderMonList(){
   var html='';
   for(var i=0;i<S.monsters.length;i++){
-    var m=S.monsters[i], active=(i===S.activeMonIdx);
+    var m=S.monsters[i], active=(i===S.activeMonIdx), isDead=m.currentHp<=0;
     var pct=m.maxHp>0?Math.max(0,m.currentHp/m.maxHp*100):0;
     var cls=pct>60?'hp-green':pct>25?'hp-yellow':'hp-red';
     var rogueTag=m.rogue?' <span style="color:#c89020;font-size:0.68rem">방랑</span>':'';
-    html+='<div class="mon-item '+(active?'active':'')+(m.rogue?' rogue':'')+'" onclick="selectMon('+i+')">'+
+    html+='<div class="mon-item '+(active?'active':'')+(m.rogue?' rogue':'')+(isDead?' dead':'')+'" onclick="selectMon('+i+')">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
-        '<span class="mon-name">'+esc(m.name)+(active?' ●':'')+rogueTag+'</span>'+
+        '<span class="mon-name">'+esc(m.name)+(isDead?' 💀':(active?' ●':''))+rogueTag+'</span>'+
         '<button class="btn btn-xs btn-red" onclick="event.stopPropagation();deleteMon('+i+')" style="padding:1px 6px;font-size:0.7rem">✕</button>'+
       '</div>'+
       '<div class="mon-hp-txt">HP '+m.currentHp+'/'+m.maxHp+'</div>'+
@@ -886,7 +906,7 @@ function monsterPickPos(){
         ?p.name+josa(p.name,'이','가')+' 반격합니다.\n공격 다이스 ['+r1+']['+r2+'] 더블 다이스! 크리티컬로 인해 '+b.name+'의 체력이 '+dmg+' 감소합니다.'
         :p.name+josa(p.name,'이','가')+' 반격합니다.\n공격 다이스 ['+r1+']['+r2+']으로 '+b.name+'의 체력이 '+dmg+' 감소합니다.';
       addLog(posLine+'\n'+msg);
-      if(prevBossHp>0&&b.currentHp<=0) addLog(b.name+josa(b.name,'이','가')+' 쓰러졌습니다!');
+      if(prevBossHp>0&&b.currentHp<=0){ addLog(b.name+josa(b.name,'이','가')+' 쓰러졌습니다!'); showToast(b.name+' 쓰러짐!'); }
     }
   } else {
     var posLine=p.name+'의 위치: ['+pL+']\n'+b.name+'의 위치: ['+mL+']';
@@ -900,7 +920,7 @@ function monsterPickPos(){
         ?p.name+'의 공격이 성공합니다.\n공격 다이스 ['+r1+']['+r2+'] 더블 다이스! 크리티컬로 인해 '+b.name+'의 체력이 '+dmg+' 감소합니다.'
         :p.name+'의 공격이 성공합니다.\n공격 다이스 ['+r1+']['+r2+']으로 '+b.name+'의 체력이 '+dmg+' 감소합니다.';
       addLog(posLine+'\n'+msg);
-      if(prevBossHp>0&&b.currentHp<=0) addLog(b.name+josa(b.name,'이','가')+' 쓰러졌습니다!');
+      if(prevBossHp>0&&b.currentHp<=0){ addLog(b.name+josa(b.name,'이','가')+' 쓰러졌습니다!'); showToast(b.name+' 쓰러짐!'); }
     } else {
       var atk=b.atkBonus||0, ar1=rollD6(), ar2=rollD6(), aDb=(ar1===ar2);
       var abase=ar1+ar2+atk, aroll=aDb?abase*2:abase;
@@ -982,7 +1002,7 @@ function rollDice(){
       ?'공격 다이스 ['+pd[0]+']['+pd[1]+'] 더블 다이스! 크리티컬로 인해 '+m.name+'의 체력이 '+dmg+' 감소합니다.'
       :p.name+'의 공격이 성공합니다. '+m.name+'의 체력이 '+dmg+' 감소합니다.';
     addLog(diceLine+'\n'+msg);
-    if(prevHp>0&&m.currentHp<=0) addLog(m.name+josa(m.name,'이','가')+' 쓰러졌습니다!');
+    if(prevHp>0&&m.currentHp<=0){ addLog(m.name+josa(m.name,'이','가')+' 쓰러졌습니다!'); showToast(m.name+' 쓰러짐!'); }
   } else if(mt>pt){
     var edmg=mt-pt, ecrit=null;
     if(mDb){ecrit='monster';edmg*=2;}
@@ -1002,7 +1022,7 @@ function rollDice(){
     result={winner:'tie',pt:pt,mt:mt,pname:p.name,mname:m.name,dmg:tdmg,critType:null,pbase:pbase,mbase:mbase,wpn:wpn,matk:matk};
     addLog(diceLine+'\n무승부. 양측 모두 '+tdmg+'의 피해를 입습니다.');
     if(prevPHp>0&&p.currentHp<=0) addLog(p.name+josa(p.name,'이','가')+' 쓰러졌습니다!');
-    if(prevMHp>0&&m.currentHp<=0) addLog(m.name+josa(m.name,'이','가')+' 쓰러졌습니다!');
+    if(prevMHp>0&&m.currentHp<=0){ addLog(m.name+josa(m.name,'이','가')+' 쓰러졌습니다!'); showToast(m.name+' 쓰러짐!'); }
   }
   d.pd=pd; d.md=md; d.result=result; d.phase='result';
   checkBattleEnd();
