@@ -489,7 +489,7 @@ function openEditPlayerInit(i){
     '<label>최대 HP</label><input id="m-maxhp" type="number" value="'+p.maxHp+'">'+
     '<label>현재 HP</label><input id="m-curhp" type="number" value="'+p.currentHp+'">';
   modalCallback=function(){
-    p.name=document.getElementById('m-name').value||p.name;
+    p.name=(document.getElementById('m-name').value||'').trim()||p.name;
     p.maxHp=parseInt(document.getElementById('m-maxhp').value)||p.maxHp;
     p.currentHp=parseInt(document.getElementById('m-curhp').value)||p.currentHp;
     pushState(); renderApp();
@@ -616,8 +616,8 @@ function buildPosBattle(){
     html+='<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">';
     if(!isBossTurn){
       html+='<button class="btn btn-red btn-sm" onclick="startBossTurn()">보스 공격 턴</button>';
-      html+='<button class="btn btn-sm" style="background:var(--surf2);border:1px solid var(--border);color:var(--muted)" onclick="openEscapeModal(\'pos\')">도망</button>';
     }
+    html+='<button class="btn btn-sm" style="background:var(--surf2);border:1px solid var(--border);color:var(--muted)" onclick="openEscapeModal(\'pos\')">도망</button>';
     html+='</div>';
   }
 
@@ -1183,7 +1183,7 @@ function openEditBoss(){
     '<label>도망 성공률 (%)</label><input id="m-escape" type="number" value="'+(b.escapeRate!=null?b.escapeRate:50)+'">';
   modalCallback=function(){
     saveUndo();
-    b.name=document.getElementById('m-name').value||b.name;
+    b.name=(document.getElementById('m-name').value||'').trim()||b.name;
     b.maxHp=parseInt(document.getElementById('m-maxhp').value)||b.maxHp;
     b.currentHp=parseInt(document.getElementById('m-curhp').value)||b.currentHp;
     b.atkBonus=parseInt(document.getElementById('m-atk').value)||0;
@@ -1203,7 +1203,7 @@ function openEditMon(){
     '<label>도망 성공률 (%)</label><input id="m-escape" type="number" value="'+(m.escapeRate!=null?m.escapeRate:50)+'">';
   modalCallback=function(){
     saveUndo();
-    m.name=document.getElementById('m-name').value||m.name;
+    m.name=(document.getElementById('m-name').value||'').trim()||m.name;
     m.maxHp=parseInt(document.getElementById('m-maxhp').value)||m.maxHp;
     m.currentHp=parseInt(document.getElementById('m-curhp').value)||m.currentHp;
     m.atkBonus=parseInt(document.getElementById('m-atk').value)||0;
@@ -1224,7 +1224,7 @@ function openEditPlayer(i){
     '<label>공격 다이스 패널티 (예: -1, -2)</label><input id="m-penalty" type="number" value="'+(p.dicePenalty||0)+'">';
   modalCallback=function(){
     saveUndo();
-    p.name=document.getElementById('m-name').value||p.name;
+    p.name=(document.getElementById('m-name').value||'').trim()||p.name;
     p.maxHp=parseInt(document.getElementById('m-maxhp').value)||p.maxHp;
     p.currentHp=parseInt(document.getElementById('m-curhp').value)||p.currentHp;
     p.weapon=document.getElementById('m-wpnname').value;
@@ -1317,8 +1317,10 @@ function fbCopy(txt){ var ta=document.createElement('textarea'); ta.value=txt; d
 
 // ── 유틸 ────────────────────────────────────────────────
 function josa(name, withBatchim, withoutBatchim){
-  var code=(name||'').charCodeAt((name||'').length-1);
+  var str=(name||'').trimRight?((name||'').trimRight()||''):(name||'').replace(/\s+$/,'');
+  var code=str.charCodeAt(str.length-1);
   if(code>=0xAC00&&code<=0xD7A3) return (code-0xAC00)%28!==0?withBatchim:withoutBatchim;
+  if(code>=48&&code<=57) return [true,true,false,true,false,false,true,true,true,false][code-48]?withBatchim:withoutBatchim;
   return withBatchim+'('+withoutBatchim+')';
 }
 function rollD6(){ return Math.floor(Math.random()*6)+1; }
